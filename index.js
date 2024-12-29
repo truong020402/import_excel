@@ -19,28 +19,29 @@ app.post("/upload", upload.single("excelFile"), async (req, res) => {
     // Đọc file từ bộ nhớ
     await workbook.xlsx.load(req.file.buffer);
 
-    const worksheet = workbook.getWorksheet(1);
+    // Lấy worksheet đầu tiên
+    const worksheet = workbook.getWorksheet('Checklist Master');
 
     const data = {};
 
     // Read specific cells based on their coordinates
-    data.checklistMasterName = worksheet.getCell('D1').value;
+    data.checklistMasterName = worksheet.getCell('D1').value?? "";
     console.log(data.checklistMasterName);
-    data.purpose = worksheet.getCell('N1').value;
+    data.purpose = worksheet.getCell('N1').value?? "";
     console.log(data.purpose);
-    data.scopeOfUse = worksheet.getCell('D2').value;
+    data.scopeOfUse = worksheet.getCell('D2').value?? "";
     console.log(data.scopeOfUse);
-    data.usagePeriodFrom = worksheet.getCell('H2').value;
+    data.usagePeriodFrom = worksheet.getCell('H2').value?? "";
     console.log(data.usagePeriodFrom);
-    data.usagePeriodTo = worksheet.getCell('N2').value;
+    data.usagePeriodTo = worksheet.getCell('N2').value?? "";
     console.log(data.usagePeriodTo);
-    data.submissionAddress = worksheet.getCell('D3').value;
+    data.submissionAddress = worksheet.getCell('D3').value?? "";
     console.log(data.submissionAddress);
-    data.usageFrequency = worksheet.getCell('H3').value;
+    data.usageFrequency = worksheet.getCell('H3').value?? "";
     console.log(data.usageFrequency);
-    data.usageFrequencyNotes = worksheet.getCell('N3').value;
+    data.usageFrequencyNotes = worksheet.getCell('N3').value?? "";
     console.log(data.usageFrequencyNotes);
-    data.searchTags = worksheet.getCell('D4').value;
+    data.searchTags = worksheet.getCell('D4').value?? "";
    console.log(data.searchTags);
 
     res.json({ data });
