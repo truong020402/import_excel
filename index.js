@@ -19,7 +19,6 @@ app.post("/upload", upload.single("excelFile"), async (req, res) => {
     // Đọc file từ bộ nhớ
     await workbook.xlsx.load(req.file.buffer);
 
-    await workbook.xlsx.readFile(filePath);
     const worksheet = workbook.getWorksheet(1);
 
     const data = {};
