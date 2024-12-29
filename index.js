@@ -25,15 +25,24 @@ app.post("/upload", upload.single("excelFile"), async (req, res) => {
 
     // Read specific cells based on their coordinates
     data.checklistMasterName = worksheet.getCell('D1').value;
+    console.log(data.checklistMasterName);
     data.purpose = worksheet.getCell('N1').value;
+    console.log(data.purpose);
     data.scopeOfUse = worksheet.getCell('D2').value;
+    console.log(data.scopeOfUse);
     data.usagePeriodFrom = worksheet.getCell('H2').value;
+    console.log(data.usagePeriodFrom);
     data.usagePeriodTo = worksheet.getCell('N2').value;
+    console.log(data.usagePeriodTo);
     data.submissionAddress = worksheet.getCell('D3').value;
+    console.log(data.submissionAddress);
     data.usageFrequency = worksheet.getCell('H3').value;
+    console.log(data.usageFrequency);
     data.usageFrequencyNotes = worksheet.getCell('N3').value;
+    console.log(data.usageFrequencyNotes);
     data.searchTags = worksheet.getCell('D4').value;
-   
+   console.log(data.searchTags);
+
     res.json({ data });
   } catch (error) {
     console.error(error);
