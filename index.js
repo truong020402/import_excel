@@ -20,30 +20,52 @@ app.post("/upload", upload.single("excelFile"), async (req, res) => {
     await workbook.xlsx.load(req.file.buffer);
 
     // Lấy worksheet đầu tiên
-    const worksheet = workbook.getWorksheet('Checklist Master');
+    const worksheet = workbook.getWorksheet("Checklist Master");
 
     const data = {};
 
     // Read specific cells based on their coordinates
-    data.checklistMasterName = worksheet.getCell('D1').value?? "";
+    data.checklistMasterName = worksheet.getCell("D1").value ?? "";
     console.log(data.checklistMasterName);
-    data.purpose = worksheet.getCell('N1').value?? "";
+    data.purpose = worksheet.getCell("N1").value ?? "";
     console.log(data.purpose);
-    data.scopeOfUse = worksheet.getCell('D2').value?? "";
+    data.scopeOfUse = worksheet.getCell("D2").value ?? "";
     console.log(data.scopeOfUse);
-    data.usagePeriodFrom = worksheet.getCell('H2').value?? "";
+    data.usagePeriodFrom = worksheet.getCell("H2").value ?? "";
     console.log(data.usagePeriodFrom);
-    data.usagePeriodTo = worksheet.getCell('N2').value?? "";
+    data.usagePeriodTo = worksheet.getCell("N2").value ?? "";
     console.log(data.usagePeriodTo);
-    data.submissionAddress = worksheet.getCell('D3').value?? "";
+    data.submissionAddress = worksheet.getCell("D3").value ?? "";
     console.log(data.submissionAddress);
-    data.usageFrequency = worksheet.getCell('H3').value?? "";
+    data.usageFrequency = worksheet.getCell("H3").value ?? "";
     console.log(data.usageFrequency);
-    data.usageFrequencyNotes = worksheet.getCell('N3').value?? "";
+    data.usageFrequencyNotes = worksheet.getCell("N3").value ?? "";
     console.log(data.usageFrequencyNotes);
-    data.searchTags = worksheet.getCell('D4').value?? "";
-   console.log(data.searchTags);
+    data.searchTags = worksheet.getCell("D4").value ?? "";
+    console.log(data.searchTags);
 
+    // Bắt đầu đọc dữ liệu từ hàng thứ 2 (bỏ qua hàng tiêu đề)
+    let rowNumber = 9;
+    let currentRow = worksheet.getRow(rowNumber);
+    const Check_list = [];
+
+    const Category = 2; // Cột B
+    const Item = 3; // Cột C
+    const Guideline = 4; // Cột D
+
+
+    while (currentRow.getCell(Category).value || currentRow.getCell(Item).value || currentRow.getCell(Guideline).value) {
+      const checkList = {
+        category: currentRow.getCell(Category).value,
+        item: currentRow.getCell(Item).value,
+        guideline: currentRow.getCell(Guideline).value,
+      };
+      Check_list.push(checkList);
+      rowNumber++;
+      currentRow = worksheet.getRow(rowNumber);
+
+    }
+    data.checkList = Check_list;
     res.json({ data });
   } catch (error) {
     console.error(error);
