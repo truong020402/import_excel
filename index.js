@@ -51,7 +51,7 @@ app.post("/upload", upload.single("excelFile"), async (req, res) => {
 
     const Category = 2; // Cột B
     const Item = 3; // Cột C
-    const Guideline = 4; // Cột D
+    const Guideline = 5; // Cột E
 
 
     while (currentRow.getCell(Category).value || currentRow.getCell(Item).value || currentRow.getCell(Guideline).value) {
