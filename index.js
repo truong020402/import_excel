@@ -44,7 +44,7 @@ app.post("/upload", upload.single("excelFile"), async (req, res) => {
     data.searchTags = worksheet.getCell("D4").value ?? "";
     console.log(data.searchTags);
 
-    // Bắt đầu đọc dữ liệu từ hàng thứ 2 (bỏ qua hàng tiêu đề)
+    // Bắt đầu đọc dữ liệu từ hàng thứ 9 (bỏ qua hàng tiêu đề)
     let rowNumber = 9;
     let currentRow = worksheet.getRow(rowNumber);
     const Check_list = [];
@@ -55,17 +55,30 @@ app.post("/upload", upload.single("excelFile"), async (req, res) => {
 
 
     while (currentRow.getCell(Category).value || currentRow.getCell(Item).value || currentRow.getCell(Guideline).value) {
+
       const checkList = {
-        category: currentRow.getCell(Category).value,
-        item: currentRow.getCell(Item).value,
-        guideline: currentRow.getCell(Guideline).value,
+        category: (currentRow.getCell(Category).value ?? "").replace(/\n/g, " "),
+        item: (currentRow.getCell(Item).value ?? "").replace(/\n/g, " "),
+        guideline: (currentRow.getCell(Guideline).value ?? "").replace(/\n/g, " "),
       };
       Check_list.push(checkList);
       rowNumber++;
       currentRow = worksheet.getRow(rowNumber);
 
     }
-    data.checkList = Check_list;
+    const groupedData = Check_list.reduce((acc, entry) => {  
+      const key = entry.category.trim();  
+      if (!acc[key]) {  
+          acc[key] = [];  
+      }  
+      acc[key].push({item: entry.item, guideline: entry.guideline});  
+      return acc;  
+  }, {});  
+
+    data.checkList = Object.keys(groupedData).map(key => ({
+      category: key,
+      items: groupedData[key]
+    }));
     res.json({ data });
   } catch (error) {
     console.error(error);
