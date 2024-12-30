@@ -57,9 +57,9 @@ app.post("/upload", upload.single("excelFile"), async (req, res) => {
     while (currentRow.getCell(Category).value || currentRow.getCell(Item).value || currentRow.getCell(Guideline).value) {
 
       const checkList = {
-        category: (currentRow.getCell(Category).value ?? "").replace(/\n/g, " "),
-        item: (currentRow.getCell(Item).value ?? "").replace(/\n/g, " "),
-        guideline: (currentRow.getCell(Guideline).value ?? "").replace(/\n/g, " "),
+        category: String(currentRow.getCell(Category).value ?? "").replace(/\n/g, " "),
+        item: String(currentRow.getCell(Item).value ?? "").replace(/\n/g, " "),
+        guideline: String(currentRow.getCell(Guideline).value ?? "").replace(/\n/g, " "),
       };
       Check_list.push(checkList);
       rowNumber++;
