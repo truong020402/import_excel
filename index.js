@@ -60,9 +60,9 @@ function readCheckList(worksheet) {
   while (true) {
     const row = worksheet.getRow(rowNumber);
     const rowData = {
-      category: (row.getCell(2).value ?? "").replace(/\n/g, " "),
-      item: (row.getCell(3).value ?? "").replace(/\n/g, " "),
-      guideline: (row.getCell(5).value ?? "").replace(/\n/g, " ")
+      category: String(row.getCell(2).value ?? "").replace(/\n/g, " "),
+      item: String(row.getCell(3).value ?? "").replace(/\n/g, " "),
+      guideline: String(row.getCell(5).value ?? "").replace(/\n/g, " ")
     };
 
     if (!rowData.category && !rowData.item && !rowData.guideline) break;
