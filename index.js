@@ -5,87 +5,134 @@ const exceljs = require("exceljs");
 const app = express();
 const port = 8683;
 
-// Cấu hình multer để lưu file tải lên vào bộ nhớ
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
+
+const CELL_MAPPINGS = {
+  checklistMasterName: { name: "Checklist Master Name", cell: "D1", maxLength: 255, required: true },
+  purpose: { name : "Purpose", cell: "N1", maxLength: 500, required: true },
+  scopeOfUse: { name: "Scope of Use", cell: "D2", maxLength: 500, required: true },
+  usagePeriodFrom: { name: "Usage Period From", cell: "H2", required: true },
+  usagePeriodTo: { name: "Usage Period To", cell: "N2", required: false },
+  submissionAddress: { name: "Submission Address", cell: "D3", required: false },
+  usageFrequency: { name: "Usage Frequency", cell: "H3", required: true },
+  usageFrequencyNotes: { name: "Usage Frequency Notes", cell: "N3", maxLength: 100, required: false },
+  searchTags: { name: "Search Tags", cell: "D4", required: false }
+};
+
+const CHECK_LIST_COLUMNS = {
+  category: { name: "Category", col: 'B', maxLength: 255 },
+  item: { name: "Item", col: 'C', maxLength: 255 },
+  guideline: { name: "Guideline", col: 'E', maxLength: 255 }
+};
+
+function validateCell(value, config, cell, messages) {
+  if (config.required && !value) {
+    messages.push(`Cell ${cell}: ${config.name} cannot be empty!`);
+  }
+  if (value && config.maxLength && value.length > config.maxLength) {
+    messages.push(`Cell ${cell}: ${config.name} is too long!`);
+  }
+}
+
+function readBasicData(worksheet) {
+  const data = {};
+  const messages = [];
+
+  for (const [key, config] of Object.entries(CELL_MAPPINGS)) {
+    data[key] = worksheet.getCell(config.cell).value ?? "";
+    validateCell(data[key], config, config.cell, messages);
+  }
+
+  // Special validation for usageFrequencyNotes
+  if (data.usageFrequency === "Others" && !data.usageFrequencyNotes) {
+    messages.push("Cell N3: Usage Frequency Notes cannot be empty!");
+  }
+
+  return { data, messages };
+}
+
+function readCheckList(worksheet) {
+  const checkList = [];
+  const messages = [];
+  let rowNumber = 9;
+
+  while (true) {
+    const row = worksheet.getRow(rowNumber);
+    const rowData = {
+      category: (row.getCell(2).value ?? "").replace(/\n/g, " "),
+      item: (row.getCell(3).value ?? "").replace(/\n/g, " "),
+      guideline: (row.getCell(5).value ?? "").replace(/\n/g, " ")
+    };
+
+    if (!rowData.category && !rowData.item && !rowData.guideline) break;
+
+    Object.entries(CHECK_LIST_COLUMNS).forEach(([field, config]) => {
+      if (rowData[field].length > config.maxLength) {
+        messages.push(`Cell ${config.col}${rowNumber}: ${config.name} is too long!`);
+      }
+    });
+
+    checkList.push(rowData);
+    rowNumber++;
+  }
+
+  return { checkList, messages };
+}
+
+function groupCheckListData(checkList) {
+  const grouped = checkList.reduce((acc, entry) => {
+    const key = entry.category.trim();
+    if (!acc[key]) acc[key] = [];
+    acc[key].push({ item: entry.item, guideline: entry.guideline });
+    return acc;
+  }, {});
+
+  return Object.keys(grouped).map(key => ({
+    category: key,
+    items: grouped[key]
+  }));
+}
 
 app.post("/upload", upload.single("excelFile"), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: "Không có file nào được tải lên." });
+      return res.status(400).json({ 
+        status: 400, 
+        message: ["No file uploaded."], 
+        data: {} 
+      });
     }
 
     const workbook = new exceljs.Workbook();
-    // Đọc file từ bộ nhớ
     await workbook.xlsx.load(req.file.buffer);
-
-    // Lấy worksheet đầu tiên
     const worksheet = workbook.getWorksheet("Checklist Master");
 
-    const data = {};
+    const { data, messages: basicMessages } = readBasicData(worksheet);
+    const { checkList, messages: checkListMessages } = readCheckList(worksheet);
+    const allMessages = [...basicMessages, ...checkListMessages];
 
-    // Read specific cells based on their coordinates
-    data.checklistMasterName = worksheet.getCell("D1").value ?? "";
-    console.log(data.checklistMasterName);
-    data.purpose = worksheet.getCell("N1").value ?? "";
-    console.log(data.purpose);
-    data.scopeOfUse = worksheet.getCell("D2").value ?? "";
-    console.log(data.scopeOfUse);
-    data.usagePeriodFrom = worksheet.getCell("H2").value ?? "";
-    console.log(data.usagePeriodFrom);
-    data.usagePeriodTo = worksheet.getCell("N2").value ?? "";
-    console.log(data.usagePeriodTo);
-    data.submissionAddress = worksheet.getCell("D3").value ?? "";
-    console.log(data.submissionAddress);
-    data.usageFrequency = worksheet.getCell("H3").value ?? "";
-    console.log(data.usageFrequency);
-    data.usageFrequencyNotes = worksheet.getCell("N3").value ?? "";
-    console.log(data.usageFrequencyNotes);
-    data.searchTags = worksheet.getCell("D4").value ?? "";
-    console.log(data.searchTags);
-
-    // Bắt đầu đọc dữ liệu từ hàng thứ 9 (bỏ qua hàng tiêu đề)
-    let rowNumber = 9;
-    let currentRow = worksheet.getRow(rowNumber);
-    const Check_list = [];
-
-    const Category = 2; // Cột B
-    const Item = 3; // Cột C
-    const Guideline = 5; // Cột E
-
-
-    while (currentRow.getCell(Category).value || currentRow.getCell(Item).value || currentRow.getCell(Guideline).value) {
-
-      const checkList = {
-        category: String(currentRow.getCell(Category).value ?? "").replace(/\n/g, " "),
-        item: String(currentRow.getCell(Item).value ?? "").replace(/\n/g, " "),
-        guideline: String(currentRow.getCell(Guideline).value ?? "").replace(/\n/g, " "),
-      };
-      Check_list.push(checkList);
-      rowNumber++;
-      currentRow = worksheet.getRow(rowNumber);
-
+    if (allMessages.length === 0) {
+      data.checkList = groupCheckListData(checkList);
+      return res.json({ status: 200, message: ["success"], data });
     }
-    const groupedData = Check_list.reduce((acc, entry) => {  
-      const key = entry.category.trim();  
-      if (!acc[key]) {  
-          acc[key] = [];  
-      }  
-      acc[key].push({item: entry.item, guideline: entry.guideline});  
-      return acc;  
-  }, {});  
 
-    data.checkList = Object.keys(groupedData).map(key => ({
-      category: key,
-      items: groupedData[key]
-    }));
-    res.json({ data });
+    return res.status(400).json({ 
+      status: 400, 
+      message: allMessages, 
+      data: {} 
+    });
+
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Đã có lỗi xảy ra khi xử lý file." });
+    return res.status(500).json({ 
+      status: 500, 
+      message: ["An error occurred while processing the file."], 
+      data: {} 
+    });
   }
 });
 
 app.listen(port, () => {
-  console.log(`Server đang lắng nghe tại cổng ${port}`);
+  console.log(`Server listening on port ${port}`);
 });
