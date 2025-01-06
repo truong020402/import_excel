@@ -84,13 +84,14 @@ function groupCheckListData(checkList) {
   const grouped = checkList.reduce((acc, entry) => {
     const key = entry.category.trim();
     if (!acc[key]) acc[key] = [];
-    acc[key].push({ item: entry.item, guideline: entry.guideline });
+    acc[key].push({ item: entry.item, guideline: entry.guideline, order: acc[key].length + 1 });
     return acc;
   }, {});
 
-  return Object.keys(grouped).map(key => ({
+  return Object.keys(grouped).map((key, index) => ({
     category: key,
-    items: grouped[key]
+    items: grouped[key],
+    order: index + 1
   }));
 }
 
@@ -114,6 +115,7 @@ app.post("/upload", upload.single("excelFile"), async (req, res) => {
 
     if (allMessages.length === 0) {
       data.checkList = groupCheckListData(checkList).map((item) => JSON.stringify(item));
+     
       return res.json({ status: 200, message: ["success"], data });
     }
 
