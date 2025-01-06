@@ -73,7 +73,7 @@ function readCheckList(worksheet) {
       }
     });
 
-    checkList.push(rowData);
+    checkList.push(JSON.stringify(rowData));
     rowNumber++;
   }
 
