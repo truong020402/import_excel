@@ -73,7 +73,7 @@ function readCheckList(worksheet) {
       }
     });
 
-    checkList.push(JSON.stringify(rowData));
+    checkList.push(rowData);
     rowNumber++;
   }
 
@@ -113,7 +113,7 @@ app.post("/upload", upload.single("excelFile"), async (req, res) => {
     const allMessages = [...basicMessages, ...checkListMessages];
 
     if (allMessages.length === 0) {
-      data.checkList = groupCheckListData(checkList);
+      data.checkList = groupCheckListData(checkList).map((item) => JSON.stringify(item));
       return res.json({ status: 200, message: ["success"], data });
     }
 
