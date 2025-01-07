@@ -115,7 +115,7 @@ app.post("/upload", upload.single("excelFile"), async (req, res) => {
 
     if (allMessages.length === 0) {
       data.checkList = groupCheckListData(checkList).map((item) => JSON.stringify(item));
-     
+      data.searchTags = ["test", "Event management", "personne"];
       return res.json({ status: 200, message: ["success"], data });
     }
 
