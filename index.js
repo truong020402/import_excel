@@ -91,6 +91,7 @@ function groupCheckListData(checkList) {
     acc[key].push({
       item: entry.item,
       guideline: entry.guideline,
+      required: entry.required,
       order: acc[key].length + 1,
     });
     return acc;
