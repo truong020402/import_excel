@@ -9,26 +9,16 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 const CELL_MAPPINGS = {
-  checklistMasterName: {
-    name: "Checklist Master Name",
-    cell: "B1",
-    maxLength: 255,
-    required: true,
-  },
+  checklistMasterName: { name: "Checklist Master Name", cell: "B1", maxLength: 255, required: true },
   purpose: { name: "Purpose", cell: "B2", maxLength: 500, required: true },
-  scopeOfUse: {
-    name: "Scope of Use",
-    cell: "B3",
-    maxLength: 500,
-    required: true,
-  },
+  scopeOfUse: { name: "Scope Of Use", cell: "B3", maxLength: 500, required: true },
   usageFrequency: { name: "Usage Frequency", cell: "B4", required: false },
 };
 
 const CHECK_LIST_COLUMNS = {
-  category: { name: "Category", col: "B", maxLength: 255 },
-  item: { name: "Item", col: "C", maxLength: 255 },
-  guideline: { name: "Guideline", col: "D", maxLength: 255 },
+  category: { name: "Category", col: "B", maxLength: 2000 },
+  item: { name: "Item", col: "C", maxLength: 2000 },
+  guideline: { name: "Guideline", col: "D", maxLength: 2000 },
   required: { name: "Required", col: "E", maxLength: 255 },
 };
 
@@ -46,7 +36,7 @@ function readBasicData(worksheet) {
   const messages = [];
 
   for (const [key, config] of Object.entries(CELL_MAPPINGS)) {
-    data[key] = worksheet.getCell(config.cell).value ?? "";
+    data[key] = String(worksheet.getCell(config.cell).value ?? "").substring(0, config.maxLength);
     validateCell(data[key], config, config.cell, messages);
   }
 
@@ -61,21 +51,21 @@ function readCheckList(worksheet) {
   while (true) {
     const row = worksheet.getRow(rowNumber);
     const rowData = {
-      category: String(row.getCell(2).text ?? "").replace(/\n/g, " "),
-      item: String(row.getCell(3).text ?? "").replace(/\n/g, " "),
-      guideline: String(row.getCell(4).text ?? "").replace(/\n/g, " "),
-      required: String(row.getCell(5).text ?? "").replace(/\n/g, " "),
+      category: String(row.getCell(2).text ?? "").replace(/\n/g, " ").substring(0, 2000),
+      item: String(row.getCell(3).text ?? "").replace(/\n/g, " ").substring(0, 2000),
+      guideline: String(row.getCell(4).text ?? "").replace(/\n/g, " ").substring(0, 2000),
+      required: String(row.getCell(5).text ?? "").replace(/\n/g, " ").substring(0, 255),
     };
 
     if (!rowData.category && !rowData.item && !rowData.guideline) break;
 
-    Object.entries(CHECK_LIST_COLUMNS).forEach(([field, config]) => {
-      if (rowData[field].length > config.maxLength) {
-        messages.push(
-          `Cell ${config.col}${rowNumber}: ${config.name} is too long!`
-        );
-      }
-    });
+    // Object.entries(CHECK_LIST_COLUMNS).forEach(([field, config]) => {
+    //   if (rowData[field].length > config.maxLength) {
+    //     messages.push(
+    //       `Cell ${config.col}${rowNumber}: ${config.name} is too long!`
+    //     );
+    //   }
+    // });
 
     checkList.push(rowData);
     rowNumber++;
@@ -117,10 +107,7 @@ app.post("/upload", upload.single("excelFile"), async (req, res) => {
     const workbook = new exceljs.Workbook();
     await workbook.xlsx.load(req.file.buffer);
     const worksheet = workbook.worksheets[0];
-    // const sheetNames = workbook.worksheets.map((sheet) => sheet.name);
-    // console.log(sheetNames);
-    // const worksheet = workbook.getWorksheet(sheetNames[0]);
-    
+
     const { data, messages: basicMessages } = readBasicData(worksheet);
     const { checkList, messages: checkListMessages } = readCheckList(worksheet);
     const allMessages = [...basicMessages, ...checkListMessages];
@@ -151,6 +138,3 @@ app.post("/upload", upload.single("excelFile"), async (req, res) => {
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
-
-
-
