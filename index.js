@@ -46,29 +46,21 @@ function readBasicData(worksheet) {
 function readCheckList(worksheet) {
   const checkList = [];
   const messages = [];
-  let rowNumber = 7;
 
-  while (true) {
+  for (let rowNumber = 7; rowNumber <= worksheet.rowCount; rowNumber++) {
     const row = worksheet.getRow(rowNumber);
     const rowData = {
-      category: String(row.getCell(2).text ?? "").replace(/\n/g, " ").substring(0, 2000),
-      item: String(row.getCell(3).text ?? "").replace(/\n/g, " ").substring(0, 2000),
-      guideline: String(row.getCell(4).text ?? "").replace(/\n/g, " ").substring(0, 2000),
-      required: String(row.getCell(5).text ?? "").replace(/\n/g, " ").substring(0, 255),
+      category: String(row.getCell(2).text ?? "").substring(0, 2000),
+      item: String(row.getCell(3).text ?? "").substring(0, 2000),
+      guideline: String(row.getCell(4).text ?? "").substring(0, 2000),
+      required: String(row.getCell(5).text ?? "").substring(0, 255),
     };
 
-    if (!rowData.category && !rowData.item && !rowData.guideline) break;
-
-    // Object.entries(CHECK_LIST_COLUMNS).forEach(([field, config]) => {
-    //   if (rowData[field].length > config.maxLength) {
-    //     messages.push(
-    //       `Cell ${config.col}${rowNumber}: ${config.name} is too long!`
-    //     );
-    //   }
-    // });
+    if (!rowData.category && !rowData.item && !rowData.guideline && !rowData.required) {
+      continue;
+    }
 
     checkList.push(rowData);
-    rowNumber++;
   }
 
   return { checkList, messages };
@@ -106,6 +98,7 @@ app.post("/upload", upload.single("excelFile"), async (req, res) => {
 
     const workbook = new exceljs.Workbook();
     await workbook.xlsx.load(req.file.buffer);
+
     const worksheet = workbook.worksheets[0];
 
     const { data, messages: basicMessages } = readBasicData(worksheet);
@@ -138,3 +131,8 @@ app.post("/upload", upload.single("excelFile"), async (req, res) => {
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
+
+
+
+
+
