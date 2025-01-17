@@ -106,7 +106,7 @@ app.post("/upload", upload.single("excelFile"), async (req, res) => {
     const allMessages = [...basicMessages, ...checkListMessages];
 
     if (allMessages.length === 0) {
-      data.checkList = groupCheckListData(checkList).map((item) =>
+      data.checklist_master_items = groupCheckListData(checkList).map((item) =>
         JSON.stringify(item)
       );
 
