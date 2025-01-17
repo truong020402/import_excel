@@ -71,18 +71,18 @@ function groupCheckListData(checkList) {
     const key = entry.category.trim();
     if (!acc[key]) acc[key] = [];
     acc[key].push({
-      item: entry.item,
+      description: entry.item,
       guideline: entry.guideline,
-      required: entry.required,
-      order: acc[key].length + 1,
+      required_check: entry.required,
+      order_number: acc[key].length + 1,
     });
     return acc;
   }, {});
 
   return Object.keys(grouped).map((key, index) => ({
-    category: key,
-    items: grouped[key],
-    order: index + 1,
+    description: key,
+    checklist_master_qualification_benchmark: grouped[key],
+    order_number: index + 1,
   }));
 }
 
